@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Supply Chain Command Center – Global Logistics</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root{
+    --bg-0:#050a14;
+    --bg-1:#0a1424;
+    --bg-2:#0f1d33;
+    --card:#132542;
+    --border:#1e3a5f;
+    --text:#e8f1ff;
+    --muted:#7a93b5;
+    --accent:#00d4ff;
+    --accent-2:#00ff9d;
+    --gold:#fbbf24;
+    --success:#10b981;
+    --warning:#f59e0b;
+    --danger:#ef4444;
+    --info:#3b82f6;
+    --shadow:0 10px 40px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    background:
+      radial-gradient(1400px 700px at 0% 0%, #0a2540 0%, transparent 55%),
+      radial-gradient(1000px 600px at 100% 100%, #061a30 0%, transparent 55%),
+      var(--bg-0);
+    color:var(--text);
+    min-height:100vh;
+    padding:20px;
+    font-size:14px;
+  }
+  header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:20px;flex-wrap:wrap;gap:12px;
+    padding-bottom:16px;border-bottom:1px solid var(--border);
+  }
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:42px;height:42px;border-radius:10px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:22px;font-weight:800;color:#001a2b;
+    box-shadow:0 0 20px rgba(0,212,255,.3);
+  }
+  header h1{
+    font-size:1.35rem;letter-spacing:.5px;font-weight:700;
+    background:linear-gradient(90deg,#fff,#9ed7ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  header .subtitle{color:var(--muted);font-size:.78rem;letter-spacing:1.5px;text-transform:uppercase}
+  header .meta{color:var(--muted);font-size:.8rem;text-align:right}
+  .meta .live{color:var(--accent-2);font-weight:600}
+  .container{max-width:1500px;margin:0 auto}
+
+  /* KPIs */
+  .kpis{
+    display:grid;gap:14px;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    margin-bottom:20px;
+  }
+  .kpi{
+    background:linear-gradient(160deg,var(--card),var(--bg-2));
+    border:1px solid var(--border);
+    border-radius:12px;padding:16px 18px;
+    box-shadow:var(--shadow);
+    position:relative;overflow:hidden;
+  }
+  .kpi::before{
+    content:"";position:absolute;inset:0 auto 0 0;width:3px;
+    background:linear-gradient(180deg,var(--accent),var(--accent-2));
+  }
+  .kpi .label{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:1.2px;font-weight:600}
+  .kpi .value{font-size:1.55rem;font-weight:700;margin-top:4px;letter-spacing:.3px}
+  .kpi .sub{color:var(--muted);font-size:.75rem;margin-top:3px;display:flex;align-items:center;gap:4px}
+  .kpi .trend{font-weight:700;font-size:.75rem}
+  .trend.up{color:var(--success)}
+  .trend.down{color:var(--danger)}
+  .kpi.success::before{background:linear-gradient(180deg,#059669,#10b981)}
+  .kpi.warning::before{background:linear-gradient(180deg,#d97706,#f59e0b)}
+  .kpi.danger::before{background:linear-gradient(180deg,#b91c1c,#ef4444)}
+  .kpi.info::before{background:linear-gradient(180deg,#1d4ed8,#3b82f6)}
+  .kpi.gold::before{background:linear-gradient(180deg,#d97706,#fbbf24)}
+
+  /* Grid */
+  .grid-2{
+    display:grid;gap:16px;
+    grid-template-columns:repeat(auto-fit,minmax(380px,1fr));
+    margin-bottom:20px;
+  }
+  .grid-3{
+    display:grid;gap:16px;
+    grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+    margin-bottom:20px;
+  }
+  .panel{
+    background:linear-gradient(160deg,var(--card),var(--bg-2));
+    border:1px solid var(--border);
+    border-radius:12px;padding:18px;
+    box-shadow:var(--shadow);
+  }
+  .panel h2{
+    font-size:.95rem;margin-bottom:14px;color:#cfe4ff;font-weight:600;
+    display:flex;align-items:center;gap:8px;
+    padding-bottom:10px;border-bottom:1px solid var(--border);
+  }
+  .panel h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+  /* Form */
+  form .row{
+    display:grid;gap:10px;
+    grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+    margin-bottom:10px;
+  }
+  label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.7px;font-weight:600}
+  input,select{
+    width:100%;padding:9px 11px;
+    background:var(--bg-1);color:var(--text);
+    border:1px solid var(--border);border-radius:7px;
+    font-size:.85rem;outline:none;transition:.15s;
+    font-family:inherit;
+  }
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,212,255,.15)}
+  button{
+    cursor:pointer;border:none;border-radius:7px;
+    padding:10px 16px;font-weight:600;font-size:.85rem;
+    transition:transform .1s,box-shadow .15s;
+    font-family:inherit;
+  }
+  .btn-primary{
+    background:linear-gradient(90deg,var(--accent),var(--accent-2));
+    color:#001a2b;
+  }
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,212,255,.25)}
+  .btn-danger{background:transparent;color:var(--danger);border:1px solid rgba(239,68,68,.3);padding:5px 9px;font-size:.72rem}
+  .btn-danger:hover{background:rgba(239,68,68,.1)}
+
+  /* Tabela */
+  .table-wrap{overflow-x:auto;border-radius:9px;border:1px solid var(--border)}
+  table{width:100%;border-collapse:collapse;font-size:.8rem;min-width:1200px}
+  thead th{
+    background:var(--bg-1);color:var(--muted);
+    text-align:left;padding:10px 12px;font-weight:700;
+    text-transform:uppercase;font-size:.68rem;letter-spacing:.7px;
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;
+  }
+  tbody td{padding:10px 12px;border-bottom:1px solid rgba(30,58,95,.4)}
+  tbody tr:hover{background:rgba(0,212,255,.04)}
+  tbody tr:last-child td{border-bottom:none}
+  .badge{
+    display:inline-block;padding:3px 9px;border-radius:999px;
+    font-size:.68rem;font-weight:700;letter-spacing:.3px;
+  }
+  .badge.transito{background:rgba(59,130,246,.15);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+  .badge.alfandega{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.3)}
+  .badge.entregue{background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)}
+  .badge.atrasado{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+  .badge.separacao{background:rgba(168,85,247,.15);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+  .flag{font-size:1rem;margin-right:4px}
+  .route{font-family:'Courier New',monospace;font-size:.75rem;color:var(--accent)}
+
+  .empty{text-align:center;padding:30px;color:var(--muted);font-style:italic}
+  .chart-box{position:relative;height:280px}
+
+  .footer-note{
+    text-align:center;color:var(--muted);font-size:.72rem;margin-top:20px;
+    padding-top:16px;border-top:1px solid var(--border);letter-spacing:.5px;
+  }
+  @media (max-width:600px){
+    body{padding:12px}
+    header h1{font-size:1.1rem}
+    .kpi .value{font-size:1.2rem}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="brand">
+      <div class="logo">⚡</div>
+      <div>
+        <h1>Supply Chain Command Center</h1>
+        <div class="subtitle">Global Logistics Operations · Real-time</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="live">● LIVE</div>
+      <div id="todayMeta"></div>
+    </div>
+  </header>
+
+  <!-- KPIs -->
+  <section class="kpis">
+    <div class="kpi gold">
+      <div class="label">Valor Total Movimentado</div>
+      <div class="value" id="kpiTotalValor">US$ 0</div>
+      <div class="sub"><span class="trend up">▲ 12.4%</span> vs. mês anterior</div>
+    </div>
+    <div class="kpi info">
+      <div class="label">Shipments Ativos</div>
+      <div class="value" id="kpiAtivos">0</div>
+      <div class="sub">Em trânsito + Alfândega</div>
+    </div>
+    <div class="kpi success">
+      <div class="label">OTIF (On-Time In-Full)</div>
+      <div class="value" id="kpiOTIF">0%</div>
+      <div class="sub"><span class="trend up">▲ 2.1pp</span> meta: 95%</div>
+    </div>
+    <div class="kpi">
+      <div class="label">Lead Time Médio</div>
+      <div class="value" id="kpiLead">0 d</div>
+      <div class="sub">Door-to-door</div>
+    </div>
+    <div class="kpi danger">
+      <div class="label">Atrasados / Bloqueados</div>
+      <div class="value" id="kpiAtraso">0</div>
+      <div class="sub">Requer ação imediata</div>
+    </div>
+    <div class="kpi warning">
+      <div class="label">Retidos em Alfândega</div>
+      <div class="value" id="kpiAlfandega">0</div>
+      <div class="sub">Clearance pendente</div>
+    </div>
+  </section>
+
+  <!-- Formulário -->
+  <section class="panel" style="margin-bottom:20px">
+    <h2><span class="dot"></span> Registrar Novo Shipment</h2>
+    <form id="formShipment">
+      <div class="row">
+        <div>
+          <label>Fornecedor</label>
+          <select id="fornecedor" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Produto / SKU</label>
+          <select id="produto" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Origem (País)</label>
+          <select id="origem" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Destino (País)</label>
+          <select id="destino" required><option value="">Selecione...</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Modal</label>
+          <select id="modal" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Incoterm</label>
+          <select id="incoterm" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Status Logístico</label>
+          <select id="status" required><option value="">Selecione...</option></select>
+        </div>
+        <div>
+          <label>Moeda</label>
+          <select id="moeda" required><option value="">Selecione...</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Valor Declarado</label>
+          <input type="number" id="valor" step="0.01" min="0" placeholder="0.00" required />
+        </div>
+        <div>
+          <label>Peso (kg)</label>
+          <input type="number" id="peso" step="0.1" min="0" placeholder="0.0" required />
+        </div>
+        <div>
+          <label>Lead Time (dias)</label>
+          <input type="number" id="leadTime" step="0.5" min="0" placeholder="Ex: 28" required />
+        </div>
+        <div style="display:flex;align-items:flex-end">
+          <button type="submit" class="btn-primary" style="width:100%">➕ Registrar Shipment</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <!-- Gráficos -->
+  <section class="grid-2">
+    <div class="panel">
+      <h2><span class="dot"></span> Valor por Modal de Transporte</h2>
+      <div class="chart-box"><canvas id="chartModal"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span> Distribuição de Status Logístico</h2>
+      <div class="chart-box"><canvas id="chartStatus"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid-2">
+    <div class="panel">
+      <h2><span class="dot"></span> Lead Time Médio por Fornecedor (dias)</h2>
+      <div class="chart-box"><canvas id="chartFornecedor"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span> Volume por Rota Comercial</h2>
+      <div class="chart-box"><canvas id="chartRota"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid-3">
+    <div class="panel">
+      <h2><span class="dot"></span> Valor por Incoterm</h2>
+      <div class="chart-box"><canvas id="chartIncoterm"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span> Peso Total por Produto</h2>
+      <div class="chart-box"><canvas id="chartProduto"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2><span class="dot"></span> OTIF por Região de Destino</h2>
+      <div class="chart-box"><canvas id="chartOTIF"></canvas></div>
+    </div>
+  </section>
+
+  <!-- Tabela -->
+  <section class="panel">
+    <h2><span class="dot"></span> Tracking de Shipments</h2>
+    <div class="table-wrap">
+      <table id="tabelaShipments">
+        <thead>
+          <tr>
+            <th>BL/AWB</th><th>Fornecedor</th><th>Produto</th>
+            <th>Rota</th><th>Modal</th><th>Incoterm</th>
+            <th>Valor</th><th>Peso</th><th>Lead</th><th>Status</th><th>Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tbodyShipments"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <p class="footer-note">Supply Chain Command Center · Dados persistidos localmente · MVP Global Logistics v2.0</p>
+</div>
+
+<script>
+/* =========================================================
+   DOMÍNIOS DA CADEIA LOGÍSTICA GLOBAL
+========================================================= */
+const DOMINIOS = {
+  fornecedores: [
+    "Foxconn Technology","Samsung Electronics","BASF SE","Cargill Inc.",
+    "Siemens AG","Bosch Group","Toyota Tsusho","Hon Hai Precision",
+    "TSMC","Vale S.A.","Petroquímica Unipar","Nestlé Supply Chain"
+  ],
+  produtos: [
+    "Semicondutores","Componentes Eletrônicos","Produtos Químicos","Grãos (Soja/Milho)",
+    "Autopeças","Maquinário Industrial","Polímeros","Minério de Ferro",
+    "Equipamentos Médicos","Têxteis","Produtos Farmacêuticos","Aço Laminado"
+  ],
+  paises: [
+    {code:"CN",name:"China",flag:"🇨🇳"},
+    {code:"US",name:"Estados Unidos",flag:"🇺🇸"},
+    {code:"DE",name:"Alemanha",flag:"🇩🇪"},
+    {code:"JP",name:"Japão",flag:"🇯🇵"},
+    {code:"KR",name:"Coreia do Sul",flag:"🇰🇷"},
+    {code:"BR",name:"Brasil",flag:"🇧🇷"},
+    {code:"NL",name:"Holanda",flag:"🇳🇱"},
+    {code:"IN",name:"Índia",flag:"🇮🇳"},
+    {code:"MX",name:"México",flag:"🇲🇽"},
+    {code:"AR",name:"Argentina",flag:"🇦🇷"},
+    {code:"GB",name:"Reino Unido",flag:"🇬🇧"},
+    {code:"SG",name:"Singapura",flag:"🇸🇬"}
+  ],
+  modais: ["Marítimo","Aéreo","Ferroviário","Rodoviário","Multimodal"],
+  incoterms: ["EXW","FOB","CIF","CFR","DAP","DDP","FCA","CIP"],
+  status: ["Em Trânsito","Na Alfândega","Entregue","Atrasado","Em Separação"],
+  moedas: ["USD","EUR","CNY","BRL","JPY","GBP"]
+};
+
+const STORAGE_KEY = "supply_chain_global_v2";
+
+/* =========================================================
+   PERSISTÊNCIA
+========================================================= */
+const saveToLocalStorage = d => localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+const loadFromLocalStorage = () => {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e){ return null; }
+};
+
+/* =========================================================
+   SEED REALISTA (12 shipments globais)
+========================================================= */
+function seedInicial(){
+  const genId = () => crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random());
+  return [
+    {id:genId(),fornecedor:"Foxconn Technology",produto:"Semicondutores",origem:"CN",destino:"BR",
+     modal:"Marítimo",incoterm:"CIF",status:"Em Trânsito",moeda:"USD",
+     valor:2450000,peso:18500,leadTime:32,criadoEm:Date.now()-86400000*5},
+    {id:genId(),fornecedor:"BASF SE",produto:"Produtos Químicos",origem:"DE",destino:"BR",
+     modal:"Marítimo",incoterm:"FOB",status:"Na Alfândega",moeda:"EUR",
+     valor:890000,peso:24000,leadTime:28,criadoEm:Date.now()-86400000*3},
+    {id:genId(),fornecedor:"Samsung Electronics",produto:"Componentes Eletrônicos",origem:"KR",destino:"BR",
+     modal:"Aéreo",incoterm:"CIP",status:"Entregue",moeda:"USD",
+     valor:1250000,peso:3200,leadTime:5,criadoEm:Date.now()-86400000*10},
+    {id:genId(),fornecedor:"Cargill Inc.",produto:"Grãos (Soja/Milho)",origem:"US",destino:"CN",
+     modal:"Marítimo",incoterm:"FOB",status:"Em Trânsito",moeda:"USD",
+     valor:4800000,peso:55000,leadTime:42,criadoEm:Date.now()-86400000*2},
+    {id:genId(),fornecedor:"Siemens AG",produto:"Maquinário Industrial",origem:"DE",destino:"MX",
+     modal:"Multimodal",incoterm:"DAP",status:"Atrasado",moeda:"EUR",
+     valor:680000,peso:12500,leadTime:38,criadoEm:Date.now()-86400000*15},
+    {id:genId(),fornecedor:"TSMC",produto:"Semicondutores",origem:"CN",destino:"US",
+     modal:"Aéreo",incoterm:"CIP",status:"Entregue",moeda:"USD",
+     valor:3200000,peso:850,leadTime:3,criadoEm:Date.now()-86400000*8},
+    {id:genId(),fornecedor:"Vale S.A.",produto:"Minério de Ferro",origem:"BR",destino:"CN",
+     modal:"Marítimo",incoterm:"FOB",status:"Em Trânsito",moeda:"USD",
+     valor:8500000,peso:170000,leadTime:45,criadoEm:Date.now()-86400000*1},
+    {id:genId(),fornecedor:"Bosch Group",produto:"Autopeças",origem:"DE",destino:"BR",
+     modal:"Aéreo",incoterm:"CIF",status:"Em Separação",moeda:"EUR",
+     valor:420000,peso:5800,leadTime:7,criadoEm:Date.now()-86400000*0.5},
+    {id:genId(),fornecedor:"Toyota Tsusho",produto:"Autopeças",origem:"JP",destino:"US",
+     modal:"Marítimo",incoterm:"CIF",status:"Entregue",moeda:"USD",
+     valor:1680000,peso:22000,leadTime:26,criadoEm:Date.now()-86400000*12},
+    {id:genId(),fornecedor:"Nestlé Supply Chain",produto:"Produtos Farmacêuticos",origem:"CH",destino:"BR",
+     modal:"Aéreo",incoterm:"CIP",status:"Na Alfândega",moeda:"EUR",
+     valor:540000,peso:1200,leadTime:4,criadoEm:Date.now()-86400000*1.5},
+    {id:genId(),fornecedor:"Hon Hai Precision",produto:"Componentes Eletrônicos",origem:"CN",destino:"NL",
+     modal:"Marítimo",incoterm:"FOB",status:"Em Trânsito",moeda:"USD",
+     valor:920000,peso:14500,leadTime:34,criadoEm:Date.now()-86400000*4},
+    {id:genId(),fornecedor:"Petroquímica Unipar",produto:"Polímeros",origem:"BR",destino:"AR",
+     modal:"Rodoviário",incoterm:"DAP",status:"Entregue",moeda:"USD",
+     valor:185000,peso:28000,leadTime:4,criadoEm:Date.now()-86400000*6}
+  ];
+}
+
+/* =========================================================
+   ESTADO
+========================================================= */
+let shipments = loadFromLocalStorage() || seedInicial();
+if(!loadFromLocalStorage()) saveToLocalStorage(shipments);
+
+/* =========================================================
+   UTIL
+========================================================= */
+const usd = v => 'US$ ' + Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+const pais = code => DOMINIOS.paises.find(p=>p.code===code) || {code,name:code,flag:"🏳️"};
+const slugStatus = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,'-');
+const genBL = () => 'BL-' + Math.random().toString(36).substring(2,8).toUpperCase();
+
+/* =========================================================
+   POPULA SELECTS
+========================================================= */
+function populaSelects(){
+  const fill = (id, items, labelFn = x=>x) => {
+    const el = document.getElementById(id);
+    items.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = typeof v === 'object' ? v.code : v;
+      opt.textContent = labelFn(v);
+      el.appendChild(opt);
+    });
+  };
+  fill('fornecedor', DOMINIOS.fornecedores);
+  fill('produto', DOMINIOS.produtos);
+  fill('origem', DOMINIOS.paises, p=>`${p.flag} ${p.name}`);
+  fill('destino', DOMINIOS.paises, p=>`${p.flag} ${p.name}`);
+  fill('modal', DOMINIOS.modais);
+  fill('incoterm', DOMINIOS.incoterms);
+  fill('status', DOMINIOS.status);
+  fill('moeda', DOMINIOS.moedas);
+}
+
+/* =========================================================
+   KPIs
+========================================================= */
+function renderKPIs(){
+  const totalUSD = shipments.reduce((s,v)=>s+Number(v.valor||0),0);
+  const ativos = shipments.filter(s=>s.status==="Em Trânsito"||s.status==="Na Alfândega").length;
+  const entregues = shipments.filter(s=>s.status==="Entregue").length;
+  const atrasados = shipments.filter(s=>s.status==="Atrasado").length;
+  const alfandega = shipments.filter(s=>s.status==="Na Alfândega").length;
+  const leadMedio = shipments.length ? (shipments.reduce((s,v)=>s+Number(v.leadTime||0),0)/shipments.length) : 0;
+  const otif = shipments.length ? Math.round((entregues/(entregues+atrasados||1))*100) : 0;
+
+  document.getElementById('kpiTotalValor').textContent = usd(totalUSD);
+  document.getElementById('kpiAtivos').textContent = ativos;
+  document.getElementById('kpiOTIF').textContent = otif + '%';
+  document.getElementById('kpiLead').textContent = leadMedio.toFixed(1) + ' d';
+  document.getElementById('kpiAtraso').textContent = atrasados;
+  document.getElementById('kpiAlfandega').textContent = alfandega;
+}
+
+/* =========================================================
+   TABELA
+========================================================= */
+function renderTabela(){
+  const tbody = document.getElementById('tbodyShipments');
+  tbody.innerHTML = '';
+  if(shipments.length===0){
+    tbody.innerHTML = `<tr><td colspan="11" class="empty">Nenhum shipment registrado.</td></tr>`;
+    return;
+  }
+  shipments.slice().sort((a,b)=>b.criadoEm-a.criadoEm).forEach(s=>{
+    const o = pais(s.origem), d = pais(s.destino);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="route">${genBL().substring(0,10)}</span></td>
+      <td>${s.fornecedor}</td>
+      <td>${s.produto}</td>
+      <td><span class="flag">${o.flag}</span>${o.code} → <span class="flag">${d.flag}</span>${d.code}</td>
+      <td>${s.modal}</td>
+      <td><strong>${s.incoterm}</strong></td>
+      <td>${usd(s.valor)}</td>
+      <td>${Number(s.peso).toLocaleString('en-US')} kg</td>
+      <td>${s.leadTime}d</td>
+      <td><span class="badge ${slugStatus(s.status)}">${s.status}</span></td>
+      <td><button class="btn-danger" data-id="${s.id}">🗑</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('.btn-danger').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      if(confirm('Cancelar este shipment?')){
+        shipments = shipments.filter(s=>s.id!==btn.dataset.id);
+        saveToLocalStorage(shipments);
+        renderAll();
+      }
+    });
+  });
+}
+
+/* =========================================================
+   GRÁFICOS
+========================================================= */
+let charts = {};
+const palette = ['#00d4ff','#00ff9d','#fbbf24','#ef4444','#a855f7','#3b82f6','#14b8a6','#ec4899','#f97316','#84cc16'];
+const destroyChart = k => { if(charts[k]){charts[k].destroy();charts[k]=null;} };
+
+const commonOpts = {
+  responsive:true,maintainAspectRatio:false,
+  plugins:{
+    legend:{labels:{color:'#cfe4ff',font:{size:11}}},
+    tooltip:{backgroundColor:'#0a1424',borderColor:'#1e3a5f',borderWidth:1,titleColor:'#fff',bodyColor:'#cfe4ff'}
+  }
+};
+
+function groupSum(arr,kf,vf){
+  const m={};
+  arr.forEach(r=>{m[r[kf]]=(m[r[kf]]||0)+Number(r[vf]||0);});
+  return {labels:Object.keys(m),data:Object.values(m).map(v=>+v.toFixed(2))};
+}
+function groupAvg(arr,kf,vf){
+  const m={},c={};
+  arr.forEach(r=>{m[r[kf]]=(m[r[kf]]||0)+Number(r[vf]||0);c[r[kf]]=(c[r[kf]]||0)+1;});
+  const labels=Object.keys(m);
+  return {labels,data:labels.map(l=>+(m[l]/c[l]).toFixed(1))};
+}
+
+function renderCharts(){
+  // 1) Valor por Modal
+  destroyChart('modal');
+  const gM = groupSum(shipments,'modal','valor');
+  charts.modal = new Chart(document.getElementById('chartModal'),{
+    type:'bar',
+    data:{labels:gM.labels.length?gM.labels:['-'],datasets:[{label:'Valor (USD)',data:gM.data.length?gM.data:[0],
+      backgroundColor:palette.slice(0,gM.labels.length||1),borderRadius:6}]},
+    options:{...commonOpts,scales:{
+      x:{ticks:{color:'#8aa3c4'},grid:{color:'rgba(30,58,95,.3)'}},
+      y:{ticks:{color:'#8aa3c4',callback:v=>'US$ '+(v/1e6).toFixed(1)+'M'},grid:{color:'rgba(30,58,95,.3)'}}
+    },plugins:{...commonOpts.plugins,legend:{display:false}}}
+  });
+
+  // 2) Status Logístico
+  destroyChart('status');
+  const gS = groupSum(shipments,'status','valor');
+  const statusColors = {"Em Trânsito":"#3b82f6","Na Alfândega":"#fbbf24","Entregue":"#10b981","Atrasado":"#ef4444","Em Separação":"#a855f7"};
+  charts.status = new Chart(document.getElementById('chartStatus'),{
+    type:'doughnut',
+    data:{labels:gS.labels.length?gS.labels:DOMINIOS.status,
+      datasets:[{data:gS.data.length?gS.data:[0,0,0,0,0],
+        backgroundColor:(gS.labels.length?gS.labels:DOMINIOS.status).map(s=>statusColors[s]||'#1e3a5f'),
+        borderColor:'#0a1424',borderWidth:3}]},
+    options:{...commonOpts,cutout:'62%',plugins:{...commonOpts.plugins,legend:{position:'right'}}}
+  });
+
+  // 3) Lead Time por Fornecedor
+  destroyChart('fornecedor');
+  const gF = groupAvg(shipments,'fornecedor','leadTime');
+  charts.fornecedor = new Chart(document.getElementById('chartFornecedor'),{
+    type:'bar',
+    data:{labels:gF.labels.length?gF.labels:['-'],datasets:[{label:'Lead Time (dias)',data:gF.data.length?gF.data:[0],
+      backgroundColor:'#00d4ff',borderRadius:6}]},
+    options:{indexAxis:'y',...commonOpts,scales:{
+      x:{ticks:{color:'#8aa3c4',callback:v=>v+'d'},grid:{color:'rgba(30,58,95,.3)'}},
+      y:{ticks:{color:'#cfe4ff',font:{size:10}},grid:{display:false}}
+    },plugins:{...commonOpts.plugins,legend:{display:false}}}
+  });
+
+  // 4) Volume por Rota
+  destroyChart('rota');
+  const rotas = shipments.map(s=>`${pais(s.origem).code} → ${pais(s.destino).code}`);
+  const gR = {};
+  shipments.forEach((s,i)=>{const r=rotas[i];gR[r]=(gR[r]||0)+Number(s.valor||0);});
+  const rLabels = Object.keys(gR), rData = Object.values(gR).map(v=>+v.toFixed(0));
+  charts.rota = new Chart(document.getElementById('chartRota'),{
+    type:'bar',
+    data:{labels:rLabels.length?rLabels:['-'],datasets:[{label:'Valor (USD)',data:rData.length?rData:[0],
+      backgroundColor:palette.slice(0,rLabels.length||1),borderRadius:6}]},
+    options:{...commonOpts,scales:{
+      x:{ticks:{color:'#8aa3c4',font:{family:'Courier New'}},grid:{color:'rgba(30,58,95,.3)'}},
+      y:{ticks:{color:'#8aa3c4',callback:v=>'US$ '+(v/1e6).toFixed(1)+'M'},grid:{color:'rgba(30,58,95,.3)'}}
+    },plugins:{...commonOpts.plugins,legend:{display:false}}}
+  });
+
+  // 5) Valor por Incoterm
+  destroyChart('incoterm');
+  const gI = groupSum(shipments,'incoterm','valor');
+  charts.incoterm = new Chart(document.getElementById('chartIncoterm'),{
+    type:'polarArea',
+    data:{labels:gI.labels.length?gI.labels:['-'],datasets:[{data:gI.data.length?gI.data:[0],
+      backgroundColor:palette.slice(0,gI.labels.length||1).map(c=>c+'cc'),borderColor:'#0a1424',borderWidth:2}]},
+    options:{...commonOpts,scales:{r:{ticks:{color:'#8aa3c4',backdropColor:'transparent'},grid:{color:'rgba(30,58,95,.3)'}}},
+      plugins:{...commonOpts.plugins,legend:{position:'bottom'}}}
+  });
+
+  // 6) Peso por Produto
+  destroyChart('produto');
+  const gP = groupSum(shipments,'produto','peso');
+  charts.produto = new Chart(document.getElementById('chartProduto'),{
+    type:'bar',
+    data:{labels:gP.labels.length?gP.labels:['-'],datasets:[{label:'Peso (kg)',data:gP.data.length?gP.data:[0],
+      backgroundColor:'#00ff9d',borderRadius:6}]},
+    options:{indexAxis:'y',...commonOpts,scales:{
+      x:{ticks:{color:'#8aa3c4',callback:v=>(v/1000).toFixed(0)+'t'},grid:{color:'rgba(30,58,95,.3)'}},
+      y:{ticks:{color:'#cfe4ff',font:{size:10}},grid:{display:false}}
+    },plugins:{...commonOpts.plugins,legend:{display:false}}}
+  });
+
+  // 7) OTIF por Destino
+  destroyChart('otif');
+  const otifMap = {};
+  DOMINIOS.paises.forEach(p=>{otifMap[p.code]={ent:0,tot:0};});
+  shipments.forEach(s=>{
+    if(!otifMap[s.destino]) otifMap[s.destino]={ent:0,tot:0};
+    otifMap[s.destino].tot++;
+    if(s.status==="Entregue") otifMap[s.destino].ent++;
+  });
+  const oLabels=[],oData=[];
+  Object.keys(otifMap).forEach(k=>{
+    const o=otifMap[k];
+    if(o.tot>0){oLabels.push(pais(k).flag+' '+k);oData.push(Math.round(o.ent/o.tot*100));}
+  });
+  charts.otif = new Chart(document.getElementById('chartOTIF'),{
+    type:'bar',
+    data:{labels:oLabels.length?oLabels:['-'],datasets:[{label:'OTIF %',data:oData.length?oData:[0],
+      backgroundColor:oData.map(v=>v>=95?'#10b981':v>=80?'#fbbf24':'#ef4444'),borderRadius:6}]},
+    options:{...commonOpts,scales:{
+      x:{ticks:{color:'#8aa3c4'},grid:{color:'rgba(30,58,95,.3)'}},
+      y:{min:0,max:100,ticks:{color:'#8aa3c4',callback:v=>v+'%'},grid:{color:'rgba(30,58,95,.3)'}}
+    },plugins:{...commonOpts.plugins,legend:{display:false},
+      annotation:{annotations:{linha:{type:'line',yMin:95,yMax:95,borderColor:'#fbbf24',borderDash:[5,5]}}}}}
+  });
+}
+
+/* =========================================================
+   FORM SUBMIT
+========================================================= */
+document.getElementById('formShipment').addEventListener('submit',e=>{
+  e.preventDefault();
+  const novo = {
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()),
+    fornecedor: document.getElementById('fornecedor').value,
+    produto: document.getElementById('produto').value,
+    origem: document.getElementById('origem').value,
+    destino: document.getElementById('destino').value,
+    modal: document.getElementById('modal').value,
+    incoterm: document.getElementById('incoterm').value,
+    status: document.getElementById('status').value,
+    moeda: document.getElementById('moeda').value,
+    valor: parseFloat(document.getElementById('valor').value),
+    peso: parseFloat(document.getElementById('peso').value),
+    leadTime: parseFloat(document.getElementById('leadTime').value),
+    criadoEm: Date.now()
+  };
+  shipments.push(novo);
+  saveToLocalStorage(shipments);
+  e.target.reset();
+  renderAll();
+});
+
+/* =========================================================
+   RENDER GERAL
+========================================================= */
+function renderAll(){
+  renderKPIs();
+  renderTabela();
+  renderCharts();
+}
+
+/* =========================================================
+   INIT
+========================================================= */
+populaSelects();
+document.getElementById('todayMeta').textContent =
+  new Date().toLocaleDateString('en-US',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}) +
+  ' · ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+renderAll();
+
+// Atualiza relógio a cada minuto
+setInterval(()=>{
+  document.getElementById('todayMeta').textContent =
+    new Date().toLocaleDateString('en-US',{weekday:'short',day:'2-digit',month:'short',year:'numeric'}) +
+    ' · ' + new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+},60000);
+</script>
+</body>
+</html>
